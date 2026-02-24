@@ -75,7 +75,7 @@ build-backend = "hatchling.build"
 ## 1.7 Verify Environment
 
 ```bash
-uv pip install .[dev]
+uv pip install ".[dev]"
 pytest --version
 uv --version
 ```
