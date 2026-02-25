@@ -19,7 +19,7 @@ services:
 ## 4.2 Run with Docker Compose
 
 ```bash
-docker compose up --build
+docker compose up --build -d
 ```
 
 ## 4.3 Verify
@@ -28,6 +28,20 @@ Visit http://localhost:8000/ or use curl:
 
 ```bash
 curl http://localhost:8000/
+```
+
+## 4.4 View Docker Compose Logs
+
+To see the logs for the `web` service, run:
+
+```bash
+docker compose logs web
+```
+
+To follow the logs in real time, use:
+
+```bash
+docker compose logs -f web
 ```
 
 ---
