@@ -19,6 +19,7 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ## 3.2 Build Docker Image
 
 ```bash
+export DOCKER_BUILDKIT=1
 docker build -t fastapi-infisical-project .
 ```
 
