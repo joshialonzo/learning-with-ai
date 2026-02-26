@@ -10,7 +10,6 @@
 Add Redis service:
 
 ```yaml
-version: '3.8'
 services:
   web:
     build: .

@@ -22,7 +22,6 @@ POSTGRES_DB=postgres
 Reference `local.env` in Compose:
 
 ```yaml
-version: '3.8'
 services:
   web:
     build: .
