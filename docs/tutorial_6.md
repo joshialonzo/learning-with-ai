@@ -1,13 +1,25 @@
-# Tutorial 6 — Redis Integration
+# Tutorial 6 — PostgreSQL Integration with local.env
 
 ## Goal
-- Add Redis service to Docker Compose
-- Connect FastAPI app to Redis
-- Add integration test for cache connectivity
+- Add PostgreSQL service to Docker Compose
+- Use local.env for environment variables
+- Connect FastAPI app to PostgreSQL
+- Add integration test for DB connectivity
 
-## 6.1 Update docker-compose.yml
+## 6.1 Create local.env
 
-Add Redis service:
+Create a file named `local.env`:
+
+```
+DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=postgres
+```
+
+## 6.2 Update docker-compose.yml
+
+Reference `local.env` in Compose:
 
 ```yaml
 version: '3.8'
@@ -18,75 +30,65 @@ services:
       - "8000:8000"
     depends_on:
       - db
-      - redis
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
-      - REDIS_URL=redis://redis:6379/0
+    env_file:
+      - local.env
   db:
     image: postgres:15
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+    env_file:
+      - local.env
     ports:
       - "5432:5432"
-  redis:
-    image: redis:7
-    ports:
-      - "6379:6379"
 ```
 
-## 6.2 Install redis-py
+## 6.3 Install psycopg2-binary
 
 ```bash
-uv pip install redis
+uv pip install psycopg2-binary
 ```
 
-## 6.3 Update FastAPI App for Redis
+## 6.4 Update FastAPI App for DB
 
 Update `main.py`:
 
 ```python
 import os
-import redis
+import psycopg2
 from fastapi import FastAPI
 
 app = FastAPI()
 
-redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-redis_client = redis.Redis.from_url(redis_url)
-
-@app.get("/cache-status")
-def cache_status():
+@app.get("/db-status")
+def db_status():
+    db_url = os.getenv("DATABASE_URL")
     try:
-        redis_client.set("test", "ok")
-        value = redis_client.get("test")
-        return {"cache": value.decode()}
+        conn = psycopg2.connect(db_url)
+        conn.close()
+        return {"db": "connected"}
     except Exception as e:
-        return {"cache": "error", "detail": str(e)}
+        return {"db": "error", "detail": str(e)}
 ```
 
-## 6.4 Integration Test
+## 6.5 Integration Test
 
-Create `test_cache.py`:
+Create `test_db.py`:
 
 ```python
 import httpx
 
-def test_cache_status():
-    response = httpx.get("http://localhost:8000/cache-status")
+def test_db_status():
+    response = httpx.get("http://localhost:8000/db-status")
     assert response.status_code == 200
-    assert response.json()["cache"] == "ok"
+    assert response.json()["db"] == "connected"
 ```
 
 Run the test:
 
 ```bash
 uv pip install pytest httpx
-pytest test_cache.py
+pytest test_db.py
 ```
 
 ---
 
 ## Next Steps
-Proceed to Tutorial 7 to add Infisical integration.
+Proceed to Tutorial 7 to add Redis integration.

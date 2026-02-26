@@ -1,86 +1,92 @@
-# Tutorial 7 — Infisical Integration
+# Tutorial 6 — Redis Integration
 
 ## Goal
-- Integrate Infisical for secrets management
-- Retrieve secrets and write to config.yaml
-- Pass secrets as environment variables to Docker Compose
-- Add integration test for secrets
+- Add Redis service to Docker Compose
+- Connect FastAPI app to Redis
+- Add integration test for cache connectivity
 
-## 7.1 Install Infisical CLI
+## 6.1 Update docker-compose.yml
 
-Follow instructions at https://infisical.com/docs/cli/installation
-
-```bash
-curl -sSf https://infisical.com/install.sh | sh
-```
-
-## 7.2 Authenticate and Pull Secrets
-
-Authenticate with Infisical:
-
-```bash
-infisical login
-```
-
-Pull secrets for your project:
-
-```bash
-infisical export --env=dev --format=yaml --output=config.yaml
-```
-
-## 7.3 Use config.yaml in Docker Compose
-
-Update your Docker Compose file to load environment variables from config.yaml:
+Add Redis service:
 
 ```yaml
+version: '3.8'
 services:
   web:
-    # ...existing code...
-    env_file:
-      - config.yaml
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+      - REDIS_URL=redis://redis:6379/0
   db:
-    # ...existing code...
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
   redis:
-    # ...existing code...
+    image: redis:7
+    ports:
+      - "6379:6379"
 ```
 
-## 7.4 Update FastAPI App to Use Secrets
+## 6.2 Install redis-py
 
-Read secrets from environment variables in `main.py`:
+```bash
+uv pip install redis
+```
+
+## 6.3 Update FastAPI App for Redis
+
+Update `main.py`:
 
 ```python
 import os
+import redis
 from fastapi import FastAPI
 
 app = FastAPI()
 
-@app.get("/secrets")
-def secrets():
-    secret_value = os.getenv("MY_SECRET")
-    return {"MY_SECRET": secret_value}
+redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+redis_client = redis.Redis.from_url(redis_url)
+
+@app.get("/cache-status")
+def cache_status():
+    try:
+        redis_client.set("test", "ok")
+        value = redis_client.get("test")
+        return {"cache": value.decode()}
+    except Exception as e:
+        return {"cache": "error", "detail": str(e)}
 ```
 
-## 7.5 Integration Test
+## 6.4 Integration Test
 
-Create `test_secrets.py`:
+Create `test_cache.py`:
 
 ```python
 import httpx
 
-def test_secrets():
-    response = httpx.get("http://localhost:8000/secrets")
+def test_cache_status():
+    response = httpx.get("http://localhost:8000/cache-status")
     assert response.status_code == 200
-    assert "MY_SECRET" in response.json()
+    assert response.json()["cache"] == "ok"
 ```
 
 Run the test:
 
 ```bash
 uv pip install pytest httpx
-pytest test_secrets.py
+pytest test_cache.py
 ```
 
 ---
 
 ## Next Steps
-Proceed to Tutorial 8 for end-to-end testing.
+Proceed to Tutorial 7 to add Infisical integration.
