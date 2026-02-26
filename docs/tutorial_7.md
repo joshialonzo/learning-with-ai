@@ -1,11 +1,11 @@
-# Tutorial 6 — Redis Integration
+# Tutorial 7 — Redis Integration
 
 ## Goal
 - Add Redis service to Docker Compose
 - Connect FastAPI app to Redis
 - Add integration test for cache connectivity
 
-## 6.1 Update docker-compose.yml
+## 7.1 Update docker-compose.yml
 
 Add Redis service:
 
@@ -18,30 +18,29 @@ services:
     depends_on:
       - db
       - redis
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
-      - REDIS_URL=redis://redis:6379/0
+    env_file:
+      - local.env
   db:
     image: postgres:15
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+    env_file:
+      - local.env
     ports:
       - "5432:5432"
   redis:
     image: redis:7
+    env_file:
+      - local.env
     ports:
       - "6379:6379"
 ```
 
-## 6.2 Install redis-py
+## 7.2 Install redis-py
 
 ```bash
 uv pip install redis
 ```
 
-## 6.3 Update FastAPI App for Redis
+## 7.3 Update FastAPI App for Redis
 
 Update `main.py`:
 
@@ -65,7 +64,7 @@ def cache_status():
         return {"cache": "error", "detail": str(e)}
 ```
 
-## 6.4 Integration Test
+## 7.4 Integration Test
 
 Create `test_cache.py`:
 
