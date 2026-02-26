@@ -1,0 +1,17 @@
+.venv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.swo
+.env
+.env.*
+.git
+.gitignore
+README.md
+docs/
+*.log
+*.sqlite3
+*.db
+requirements.txt

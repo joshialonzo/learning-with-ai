@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "FastAPI project with Infisical, PostgreSQL, and Redis"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["fastapi", "uvicorn"]
+dependencies = ["fastapi", "uvicorn", "psycopg2-binary"]
 
 [project.optional-dependencies]
 dev = [
